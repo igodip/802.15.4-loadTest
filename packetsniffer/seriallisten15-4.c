@@ -80,12 +80,16 @@ int main(int argc, char **argv)
       
 
       {
+	
 	if ((fcf & 0x7) == 0x01) {
 	  printf("  Frame type: data\n");
 	}
 	else if ((fcf & 0x7) == 0x02) {
 	  printf("  Frame type: acknowledgement\n");
 	}
+	else if((fcf & 0x7) == 0x0){
+	  printf("  Frame type: beacon\n");
+    }
 	else {
 	  printf("  Frame type: other\n");
 	}
@@ -182,7 +186,7 @@ int main(int argc, char **argv)
 	printf("  I-Frame: %s\n", (packet[i++] == 0x3f)? "yes":"no");
       }
       
-      printf("  AM type: 0x%02hhx\n", packet[i++]);
+      //printf("  AM type: 0x%02hhx\n", packet[i++]); ???
 
       if (i >= plen) {
 	printf("Packet format error: read packet is shorter than expected.\n");

@@ -123,7 +123,7 @@ module SnifferC
       call Leds.led0On(); // overflow
       
       #ifdef DEBUG_SERIAL
-		printf("Error Queue\n");
+		printf("Error Queue.enqueue\n");
 		printfflush();
       #endif
       
@@ -198,7 +198,7 @@ module SnifferC
     if (call SerialSend.send(frame, serialLen) != SUCCESS){
       call Leds.led0On();
       #ifdef DEBUG_SERIAL
-		printf("Error SerialSend\n");
+		printf("Error SerialSend.send\n");
 		printfflush();
       #endif
     }
@@ -208,7 +208,7 @@ module SnifferC
     if (error != SUCCESS){
       call Leds.led0On();
       #ifdef DEBUG_SERIAL
-		printf("Error SerialSend\n");
+		printf("Error SerialSendDone\n");
 		printfflush();
       #endif
     } else {
