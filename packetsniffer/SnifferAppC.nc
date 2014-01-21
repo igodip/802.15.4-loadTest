@@ -32,10 +32,16 @@
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+#ifdef DEBUG_SERIAL
+	#define NEW_PRINTF_SEMANTICS
+	#include "printf.h"
+#endif
+
 
 #include "app_profile.h"
 #include "platform_message.h"
 #include "message.h"
+
 configuration SnifferAppC
 {
 } implementation {
@@ -44,7 +50,11 @@ configuration SnifferAppC
             Serial802_15_4C as Serial,
             new QueueC(message_t*, RX_QUEUE_SIZE),
             new PoolC(message_t, RX_QUEUE_SIZE);
-
+	
+  #ifdef DEBUG_SERIAL
+	components PrintfC;
+    components SerialStartC;
+  #endif
 
   MainC.Boot <- App;
   App.Leds -> LedsC;
@@ -61,4 +71,6 @@ configuration SnifferAppC
   App.SerialSend -> Serial;
   App.Pool -> PoolC;
   App.Queue -> QueueC;
+  
+  
 }

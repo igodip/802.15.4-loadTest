@@ -34,6 +34,11 @@
  */
 #include "TKN154.h"
 #include "app_profile.h"
+
+#ifdef DEBUG_SERIAL
+	#include "printf.h"
+#endif
+
 module SnifferC
 {
   provides interface SerialPacketInfo;
@@ -60,25 +65,46 @@ module SnifferC
   event void Boot.booted() {
     m_serialSendBusy = FALSE;
     if (call Pool.maxSize() != call Queue.maxSize() ||
-        call SerialControl.start() != SUCCESS)
+        call SerialControl.start() != SUCCESS){
       call Leds.led0On(); // error
+      
+	  #ifdef DEBUG_SERIAL
+		printf("Booted error\n");
+		printfflush();
+	  #endif
+	}
   }
 
   event void SerialControl.startDone(error_t error) {
-    if (error != SUCCESS)
+    if (error != SUCCESS){
       call Leds.led0On(); // error
+      #ifdef DEBUG_SERIAL
+		printf("Error SerialStart\n");
+		printfflush();
+      #endif
+    }
     else
       call MLME_RESET.request(TRUE);
   }
 
   event void MLME_RESET.confirm(ieee154_status_t status)
   {
-    if (status != IEEE154_SUCCESS)
+    if (status != IEEE154_SUCCESS){
       call Leds.led0On(); // error
+      #ifdef DEBUG_SERIAL
+		printf("Error MLME_RESET\n");
+		printfflush();
+      #endif
+	}
     else {
       call MLME_SET.phyCurrentChannel(INITAL_RADIO_CHANNEL);
-      if (call PromiscuousMode.start() != SUCCESS)
+      if (call PromiscuousMode.start() != SUCCESS){
+		#ifdef DEBUG_SERIAL
+		   printf("Error PromiscuosMode.start\n");
+		   printfflush();
+		#endif
         call Leds.led0On(); // error
+	  }
     }
   }
 
@@ -95,9 +121,16 @@ module SnifferC
     call Leds.led1Toggle();
     if (call Queue.enqueue(frame) != SUCCESS) {
       call Leds.led0On(); // overflow
+      
+      #ifdef DEBUG_SERIAL
+		printf("Error Queue\n");
+		printfflush();
+      #endif
+      
       return frame;
     } else {
-      post serialSendTask();
+	  post serialSendTask();
+      
       return call Pool.get();
     }
   }
@@ -142,6 +175,10 @@ module SnifferC
       // message_t is too small to hold frame content + sniffer_metadata_t
       // (this cannot happen, unless someone messes with the header files)
       call Leds.led0On();
+      #ifdef DEBUG_SERIAL
+		printf("Error message_t too small\n");
+		printfflush();
+      #endif
       return;
     }
     snifferMetadata->lqi = lqi;
@@ -158,18 +195,30 @@ module SnifferC
     serialLen = 1 + // for the PHY length field
       headerLen + payloadLen + sizeof(sniffer_metadata_t);     
     m_serialSendBusy = TRUE;
-    if (call SerialSend.send(frame, serialLen) != SUCCESS)
+    if (call SerialSend.send(frame, serialLen) != SUCCESS){
       call Leds.led0On();
+      #ifdef DEBUG_SERIAL
+		printf("Error SerialSend\n");
+		printfflush();
+      #endif
+    }
   }
   
   event void SerialSend.sendDone(message_t* frame, error_t error) {
-    if (error != SUCCESS)
+    if (error != SUCCESS){
       call Leds.led0On();
-    else {
+      #ifdef DEBUG_SERIAL
+		printf("Error SerialSend\n");
+		printfflush();
+      #endif
+    } else {
       call Pool.put(call Queue.dequeue());
       m_serialSendBusy = FALSE;
-      if (!call Queue.empty())
-        post serialSendTask();
+      if (!call Queue.empty()){
+		
+		post serialSendTask();
+         
+	  }
     }
   }
 
