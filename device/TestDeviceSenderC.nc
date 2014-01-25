@@ -28,7 +28,7 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.2 $
- * $Date: 2010-01-05 17:12:56 $
+ * $Date: 2010/01/05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -59,7 +59,7 @@ module TestDeviceSenderC
   ieee154_PANDescriptor_t m_PANDescriptor;
   bool m_ledCount;
   bool m_wasScanSuccessful;
-
+bool sync;
   void startApp();
   task void packetSendTask();
 
@@ -67,11 +67,12 @@ module TestDeviceSenderC
   event void Boot.booted() {
     char payload[] = "Hello Coordinator!";
     uint8_t *payloadRegion;
-
+    sync=FALSE;
     m_payloadLen = strlen(payload);
     payloadRegion = call Packet.getPayload(&m_frame, m_payloadLen);
     if (m_payloadLen <= call Packet.maxPayloadLength()){
       memcpy(payloadRegion, payload, m_payloadLen);
+      
       call MLME_RESET.request(TRUE);
     }
   }
@@ -117,6 +118,8 @@ module TestDeviceSenderC
     ieee154_phyCurrentPage_t page = call MLME_GET.phyCurrentPage();
     ieee154_macBSN_t beaconSequenceNumber = call BeaconFrame.getBSN(frame);
 
+    call Leds.led2Toggle();
+
     if (!m_wasScanSuccessful) {
       // received a beacon during channel scanning
       if (call BeaconFrame.parsePANDescriptor(
@@ -130,11 +133,13 @@ module TestDeviceSenderC
         }
       }
     } else { 
-      // received a beacon during synchronization, toggle LED2
-      if (beaconSequenceNumber & 1)
-        call Leds.led2On();
-      else
-        call Leds.led2Off();   
+      if(sync==TRUE)
+	call MCPS_DATA.request  (
+          &m_frame,                         // frame,
+          m_payloadLen,                     // payloadLength,
+          0,                                // msduHandle,
+          TX_OPTIONS_ACK // TxOptions,
+          );
     }
 
     return frame;
@@ -164,7 +169,8 @@ module TestDeviceSenderC
           &m_PANDescriptor.CoordAddress,  // DstAddr,
           NULL                            // security
           );
-      post packetSendTask(); 
+      sync=TRUE;
+      
     } else
       startApp();
   }
@@ -189,11 +195,10 @@ module TestDeviceSenderC
                           uint32_t timestamp
                         )
   {
-    if (status == IEEE154_SUCCESS && m_ledCount++ >= 20) {
+    if (status == IEEE154_SUCCESS) {
       m_ledCount = 0;
-      call Leds.led1Toggle();
     }
-    post packetSendTask(); 
+   //post packetSendTask(); 
   }
 
   event void MLME_SYNC_LOSS.indication(
@@ -204,13 +209,13 @@ module TestDeviceSenderC
                           ieee154_security_t *security)
   {
     m_wasScanSuccessful = FALSE;
-    call Leds.led1Off();
-    call Leds.led2Off();
+    call Leds.led1Toggle();
   }
 
   event message_t* MCPS_DATA.indication (message_t* frame)
   {
     // we don't expect data
+
     return frame;
   }
 
