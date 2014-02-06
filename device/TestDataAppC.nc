@@ -1,5 +1,10 @@
 #include "app_profile.h"
 
+#ifdef DEBUG_SERIAL
+	#define NEW_PRINTF_SEMANTICS
+	#include "printf.h"
+#endif
+
 configuration TestDataAppC
 {
 } implementation {
@@ -15,7 +20,11 @@ configuration TestDataAppC
   App.BeaconFrame -> MAC;
   App.Packet -> MAC;
   
-
+  #ifdef DEBUG_SERIAL
+	components PrintfC;
+    components SerialStartC;
+  #endif
+  
   MainC.Boot <- App;
   App.Leds -> LedsC;
   App.MLME_RESET -> MAC;

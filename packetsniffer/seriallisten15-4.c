@@ -188,14 +188,13 @@ int main(int argc, char **argv)
       
       //printf("  AM type: 0x%02hhx\n", packet[i++]); ???
 
-      if (i >= plen) {
-	printf("Packet format error: read packet is shorter than expected.\n");
-      }
-      else {
+      if (i <= plen) {
 	printf("  Payload: ");
-	for (; i < plen; i++) {
-	  printf("0x%02hhx ", packet[i]);
-	}
+	/*for (; i < plen; i++) {
+	  //printf("0x%02hhx ", packet[i]);
+	  
+	}*/
+	printf("%s\n",&packet[i]);
 	printf("\n\n");
 	putchar('\n');
       }

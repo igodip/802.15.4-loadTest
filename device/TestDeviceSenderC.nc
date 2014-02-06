@@ -35,6 +35,11 @@
 
 #include "TKN154.h"
 #include "app_profile.h"
+
+#ifdef DEBUG_SERIAL
+	#include "printf.h"
+#endif
+
 module TestDeviceSenderC
 {
   uses {
@@ -65,7 +70,7 @@ bool sync;
 
 
   event void Boot.booted() {
-    char payload[] = "Hello Coordinator!";
+    char payload[] = "Hello Coordinator!\0";
     uint8_t *payloadRegion;
     sync=FALSE;
     m_payloadLen = strlen(payload);
@@ -209,7 +214,14 @@ bool sync;
                           ieee154_security_t *security)
   {
     m_wasScanSuccessful = FALSE;
-    call Leds.led1Toggle();
+    //call Leds.led1Toggle();
+    
+    #ifdef DEBUG_SERIAL
+		printf("Disassociated");
+    #endif
+    
+    call MLME_RESET.request(TRUE);
+    
   }
 
   event message_t* MCPS_DATA.indication (message_t* frame)
