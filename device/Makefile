@@ -1,5 +1,6 @@
 COMPONENT=TestDataAppC
 CFLAGS += -DIEEE154_BEACON_TX_DISABLED 
+CFLAGS += -DDEVICE_ADDRESS=2
 CFLAGS += -I$(shell pwd)/..
 
 #Serial Printf

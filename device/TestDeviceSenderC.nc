@@ -94,7 +94,7 @@ bool sync;
     uint8_t scanDuration = BEACON_ORDER;
 
     call MLME_SET.phyTransmitPower(TX_POWER);
-    call MLME_SET.macShortAddress(TOS_NODE_ID);
+    call MLME_SET.macShortAddress(DEVICE_ADDRESS);
 
     // scan only the channel where we expect the coordinator
     channelMask = ((uint32_t) 1) << RADIO_CHANNEL;
