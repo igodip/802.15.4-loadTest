@@ -56,6 +56,9 @@ module TestDeviceSenderC
     interface IEEE154BeaconFrame as BeaconFrame;
     interface Leds;
     interface Packet;
+    interface Read<uint16_t>;
+    
+    interface Timer<TMilli> as Timer0;
   }
 } implementation {
 
@@ -80,6 +83,9 @@ bool sync;
       
       call MLME_RESET.request(TRUE);
     }
+    
+    call Timer0.startPeriodic(2000);
+    
   }
 
   event void MLME_RESET.confirm(ieee154_status_t status)
@@ -230,5 +236,27 @@ bool sync;
 
     return frame;
   }
+  
+  /*** SENSORS ***/
+  
+  event void Read.readDone(error_t error, uint16_t val)
+  {
+	#ifdef DEBUG_SERIAL
+		const uint16_t D1 = -39.6;
+		const uint16_t D2 = 0.01;
+		
+		uint16_t res = val*D2+D1;
+		
+		printf("Letto sensore\n");
+		printf("Temperatura: %d\n",res);
+		printfflush();
+	#endif
+  }
+  
+  event void Timer0.fired(){
+	  
+	  call Read.read();
+  }
+
 
 }

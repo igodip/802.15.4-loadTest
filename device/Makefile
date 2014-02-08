@@ -4,9 +4,9 @@ CFLAGS += -DDEVICE_ADDRESS=2
 CFLAGS += -I$(shell pwd)/..
 
 #Serial Printf
-#CFLAGS += -DDEBUG_SERIAL
-#CFLAGS += -I$(TOSDIR)/lib/printf
-#PFLAGS += -DPRINTF_BUFFER_SIZE=1000
+CFLAGS += -DDEBUG_SERIAL
+CFLAGS += -I$(TOSDIR)/lib/printf
+PFLAGS += -DPRINTF_BUFFER_SIZE=1000
 
 # To use the TKN15.4 MAC instead of a platform's default MAC protocol first
 # include the TinyOS "Makerules" file as usual ...

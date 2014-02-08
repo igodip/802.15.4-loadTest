@@ -30,4 +30,15 @@ configuration TestDataAppC
   App.MLME_RESET -> MAC;
   App.MLME_SET -> MAC;
   App.MLME_GET -> MAC;
+  
+  //Sensors
+  components new SensirionSht11C() as TempAndHumid;
+  
+  App.Read -> TempAndHumid.Temperature;
+  
+  //Timer
+  components new TimerMilliC() as Timer0;
+  
+  App.Timer0 -> Timer0;
+  
 }
