@@ -64,26 +64,23 @@ module TestDeviceSenderC
 
   message_t m_frame;
   uint8_t m_payloadLen;
+  uint16_t sensorValue;
   ieee154_PANDescriptor_t m_PANDescriptor;
   bool m_ledCount;
   bool m_wasScanSuccessful;
+  bool dataReady;
 bool sync;
   void startApp();
   task void packetSendTask();
 
-
+//Init
   event void Boot.booted() {
-    char payload[] = "Hello Coordinator!\0";
-    uint8_t *payloadRegion;
-    sync=FALSE;
-    m_payloadLen = strlen(payload);
-    payloadRegion = call Packet.getPayload(&m_frame, m_payloadLen);
-    if (m_payloadLen <= call Packet.maxPayloadLength()){
-      memcpy(payloadRegion, payload, m_payloadLen);
-      
-      call MLME_RESET.request(TRUE);
-    }
     
+    sync=FALSE;
+    dataReady=FALSE;
+    m_payloadLen = sizeof(uint16_t);
+    
+    call MLME_RESET.request(TRUE);
     call Timer0.startPeriodic(2000);
     
   }
@@ -144,14 +141,31 @@ bool sync;
         }
       }
     } else { 
-      if(sync==TRUE)
-	call MCPS_DATA.request  (
-          &m_frame,                         // frame,
-          m_payloadLen,                     // payloadLength,
-          0,                                // msduHandle,
-          TX_OPTIONS_ACK // TxOptions,
-          );
-    }
+      if(sync==TRUE){
+		  if(dataReady == TRUE){
+			  
+			  uint8_t *payloadRegion;
+			  
+			  payloadRegion = call Packet.getPayload(&m_frame, m_payloadLen);
+
+			if (m_payloadLen <= call Packet.maxPayloadLength()){
+			  memcpy(payloadRegion, &sensorValue, m_payloadLen);
+			  call MCPS_DATA.request  (
+			  &m_frame,                         // frame,
+			  m_payloadLen,                     // payloadLength,
+			  0,                                // msduHandle,
+			  TX_OPTIONS_ACK // TxOptions,
+			  );
+			  
+			}
+			  
+
+			  
+			  dataReady = FALSE;
+		  }
+
+		}
+	}
 
     return frame;
   }
@@ -220,12 +234,13 @@ bool sync;
                           ieee154_security_t *security)
   {
     m_wasScanSuccessful = FALSE;
-    //call Leds.led1Toggle();
     
     #ifdef DEBUG_SERIAL
 		printf("Disassociated");
+		printfflush();
     #endif
     
+    call Leds.led2Off();
     call MLME_RESET.request(TRUE);
     
   }
@@ -241,17 +256,18 @@ bool sync;
   
   event void Read.readDone(error_t error, uint16_t val)
   {
+	
 	#ifdef DEBUG_SERIAL
-		const uint16_t D1 = -39.6;
-		const uint16_t D2 = 0.01;
-		
-		uint16_t res = val*D2+D1;
-		
 		printf("Letto sensore\n");
-		printf("Temperatura: %d\n",res);
+		printf("Temp: %d",val);
 		printfflush();
 	#endif
+	
+	sensorValue = val;
+	dataReady = TRUE;
   }
+  
+  /*** TIMER ***/
   
   event void Timer0.fired(){
 	  
